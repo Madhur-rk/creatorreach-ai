@@ -56,4 +56,105 @@ $$\text{Engagement Rate} = \frac{\text{Likes} + \text{Comments}}{\text{Views}} \
 * Audience age and gender are explicitly labeled `"Not Available (Requires Creator Analytics)"` since third-party APIs do not expose private YouTube Studio demographics.
 
 ### 3. Filtering & Classification (`src/filtering.py`)
-Every discovered creator is evaluated against four automated rules and assigned a `PASS` or `FAIL
+Every discovered creator is evaluated against four automated rules and assigned a `PASS` or `FAIL` status with an explicit `Filter Reason`:
+1. **Follower Range:** `5,000 <= followers <= 100,000`
+2. **Engagement Rate:** `>= 2.0%` average across recent videos
+3. **Channel Activity:** `>= 10` published videos
+4. **Niche Relevance & Brand Safety:** Keyword relevance score `>= 0.25` and zero brand-safety exclusion hits
+
+Shortlisted creators are further classified into **Tier 1 (High Priority Fit)**, **Tier 2 (Strong Fit)**, or **Tier 3 (Standard Fit)**.
+
+### 4. AI Model, Prompt & Personalization Logic (`src/personalization.py`, `src/prompts.py`)
+* Uses `gemini-2.5-flash` with `response_mime_type="application/json"` to guarantee structured output.
+* Injects each creator's name, niche, follower count, engagement rate, content themes, and **up to 3 recent video titles** into the prompt so every message is genuinely unique.
+* Enforces strict word-count validation with an automatic retry loop:
+  * **Email Pitch:** `60–90 words`
+  * **Instagram DM:** `15–30 words`
+
+### 5. Sending Mechanism (`src/sender.py`, `src/storage.py`)
+* Selects only shortlisted creators with a valid contact email (`!= "Not Found"`).
+* Checks `data/outreach.db` (SQLite) before sending to strictly prevent duplicate outreach across runs.
+* Defaults to **Dry-Run Simulation Mode** (`SIMULATED_SENT`) for safe testing; pass `--send-live` with Gmail App Password credentials in `.env` for live SMTP delivery.
+* **Instagram DM Compliance:** Rather than violating Meta/Instagram Terms of Service with unauthorized bots, the pipeline exports a ready-to-use `outputs/instagram_dm_queue.csv` with each creator's IG profile URL and copy-paste DM.
+
+---
+
+## Project Structure
+
+```text
+edxso-micro-influencer-outreach/
+├── main.py                  # End-to-end CLI pipeline entrypoint
+├── requirements.txt         # Python dependencies
+├── .env.example             # API key & brand configuration template
+├── .gitignore               # Excludes .env, caches, and local DB
+├── README.md                # Project documentation
+├── src/
+│   ├── config.py            # Niche presets & filtering thresholds
+│   ├── models.py            # Dataclass schemas
+│   ├── discovery.py         # Stage 1: YouTube Data API v3 discovery
+│   ├── enrichment.py        # Stage 2: Public email, links, and themes
+│   ├── filtering.py         # Stage 3: PASS/FAIL classification & tiers
+│   ├── prompts.py           # Structured JSON LLM prompts
+│   ├── personalization.py   # Stage 4: Gemini outreach generation
+│   ├── sender.py            # Stage 5: Gmail SMTP & dry-run dispatch
+│   └── storage.py           # SQLite deduplication & CSV exports
+├── tests/
+│   └── test_pipeline.py     # Offline unit tests
+└── outputs/                 # Generated CSV deliverables
+```
+
+---
+
+## Setup & Usage Instructions
+
+### 1. Clone & Install Dependencies
+```bash
+git clone [https://github.com/](https://github.com/)<your-username>/edxso-micro-influencer-outreach.git
+cd edxso-micro-influencer-outreach
+python -m venv .venv
+source .venv/bin/activate   # On Windows: .venv\Scripts\activate
+pip install -r requirements.txt
+```
+
+### 2. Configure Environment Variables
+```bash
+cp .env.example .env
+```
+Open `.env` and add:
+* `YOUTUBE_API_KEY` — Free from [Google Cloud Console](https://console.cloud.google.com/) (enable **YouTube Data API v3**)
+* `GEMINI_API_KEY` — Free from [Google AI Studio](https://aistudio.google.com/app/apikey)
+* *(Optional)* `SMTP_USERNAME` & `SMTP_PASSWORD` (Gmail App Password) if running `--send-live`
+
+### 3. Run the Pipeline
+```bash
+# Default safe run (Technology niche, 60 creators, dry-run email simulation)
+python main.py --niche "Technology" --target-count 60
+
+# Other built-in niches: "Fitness", "Fashion & Beauty", "Fintech"
+python main.py --niche "Fashion & Beauty" --target-count 60
+
+# Live email sending via Gmail SMTP (only after reviewing outputs!)
+python main.py --niche "Technology" --target-count 60 --send-live
+```
+
+### 4. Run Automated Unit Tests
+```bash
+python -m unittest discover -s tests -v
+```
+
+---
+
+## Generated Output Files
+
+After running `python main.py`, the following deliverables are created in `outputs/`:
+1. `outputs/influencers_dataset.csv` — All 50+ discovered influencers with metrics, enrichment fields, `Status` (`PASS`/`FAIL`), and `Filter Reason`.
+2. `outputs/personalized_messages.csv` — Shortlisted creators with AI-generated Email Subject, Email Pitch (60–90 words), Instagram DM (15–30 words), and Collaboration Angle.
+3. `outputs/outreach_tracker.csv` — Complete outreach log with delivery status, timestamp, and deduplication tracking.
+4. `outputs/instagram_dm_queue.csv` — Compliant manual sending queue for Instagram DMs.
+
+---
+
+## Limitations & Scalability Notes
+* **Email Availability:** Only creators who publicly list an email in their YouTube channel description can be contacted automatically; YouTube's CAPTCHA-gated email button is intentionally not bypassed.
+* **Audience Demographics:** Exact age/gender breakdowns are private to channel owners via YouTube Analytics API and are transparently marked unavailable.
+* **Scaling to 500+ Influencers:** The modular architecture supports scaling by rotating search queries, batching `channels.list` calls (50 IDs/request), adding async concurrency (`asyncio`/`httpx`), and swapping SQLite for PostgreSQL.
