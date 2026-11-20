@@ -31,7 +31,7 @@ Then open `http://localhost:8501` in your browser.
 YouTube search needs a YouTube Data API v3 key. Create a key in Google Cloud Console and enable the YouTube Data API v3 for the project. For local use, put the key in a `.env` file:
 
 ```text
-YOUTUBE_API_KEY=your_key_here
+YOUTUBE_API_KEY=AIzaSyBKBKN_NyQ_3WU0Z78zh1noy_cAO0qQFL4
 ```
 
 Do not upload `.env` or share your key publicly. If the app is deployed on Streamlit Community Cloud, add the key in the app's Secrets settings instead.
