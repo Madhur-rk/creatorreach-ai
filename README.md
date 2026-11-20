@@ -1,4 +1,4 @@
-# Automated Micro-Influencer Outreach System
+# CreatorReach AI — Automated Micro-Influencer Outreach System
 
 An end-to-end, modular Python pipeline that discovers real micro-influencers (5,000–100,000 followers), enriches their public profiles, filters and classifies them by niche and engagement criteria, generates personalized email pitches and Instagram DMs using an LLM, and dispatches outreach with SQLite duplicate prevention and tracking.
 
@@ -82,7 +82,7 @@ Shortlisted creators are further classified into **Tier 1 (High Priority Fit)**,
 ## Project Structure
 
 ```text
-edxso-micro-influencer-outreach/
+creatorreach-ai/
 ├── main.py                  # End-to-end CLI pipeline entrypoint
 ├── requirements.txt         # Python dependencies
 ├── .env.example             # API key & brand configuration template
@@ -109,8 +109,8 @@ edxso-micro-influencer-outreach/
 
 ### 1. Clone & Install Dependencies
 ```bash
-git clone [https://github.com/](https://github.com/)<your-username>/edxso-micro-influencer-outreach.git
-cd edxso-micro-influencer-outreach
+git clone [https://github.com/Madhur-rk/creatorreach-ai.git](https://github.com/Madhur-rk/creatorreach-ai.git)
+cd creatorreach-ai
 python -m venv .venv
 source .venv/bin/activate   # On Windows: .venv\Scripts\activate
 pip install -r requirements.txt
