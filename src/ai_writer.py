@@ -1,4 +1,8 @@
+<<<<<<< HEAD
 import os, json
+=======
+import os
+>>>>>>> origin/main
 from openai import OpenAI
 
 def generate_ai_message(creator, brand, product, tone, fallback):
@@ -7,6 +11,7 @@ def generate_ai_message(creator, brand, product, tone, fallback):
     if not api_key:
         return fallback
     client = OpenAI(api_key=api_key)
+<<<<<<< HEAD
     safe_creator = {k: creator.get(k) for k in ["full_name", "username", "platform", "category", "content_themes", "recent_content", "profile_url"]}
     prompt = f"""Create a respectful, genuinely personalized first-contact creator collaboration email.
 Brand: {brand}
@@ -20,11 +25,22 @@ Rules:
 - Never invent performance metrics, audience demographics, email addresses, familiarity, promises, or compensation.
 - Be natural, specific, concise, and respectful; no pressure.
 Return valid JSON with keys subject, body, instagram_dm. Return no markdown.
+=======
+    prompt = f"""
+Write one concise, respectful first-contact influencer collaboration email.
+Brand: {brand}
+Product: {product}
+Tone: {tone}
+Creator details: {creator}
+Avoid fabricated claims, fake familiarity, pressure, or promises.
+Return only JSON with keys subject and body.
+>>>>>>> origin/main
 """
     try:
         response = client.chat.completions.create(
             model=os.getenv("OPENAI_MODEL", "gpt-4o-mini"),
             messages=[{"role":"user","content":prompt}],
+<<<<<<< HEAD
             temperature=0.5,
             response_format={"type":"json_object"}
         )
@@ -38,5 +54,14 @@ Return valid JSON with keys subject, body, instagram_dm. Return no markdown.
         if len(dm_words) > 30: dm = " ".join(dm_words[:30])
         if len(dm.split()) < 15: dm = fallback.get("instagram_dm", "")
         return {"subject": str(data.get("subject", fallback["subject"])), "body": body, "instagram_dm": dm}
+=======
+            temperature=0.7,
+            response_format={"type":"json_object"}
+        )
+        import json
+        data = json.loads(response.choices[0].message.content)
+        return {"subject": data.get("subject", fallback["subject"]),
+                "body": data.get("body", fallback["body"])}
+>>>>>>> origin/main
     except Exception:
         return fallback

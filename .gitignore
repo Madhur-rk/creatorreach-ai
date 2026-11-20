@@ -5,6 +5,9 @@ __pycache__/
 .env
 .streamlit/secrets.toml
 .DS_Store
+<<<<<<< HEAD
 
 # Local outreach database
 creatorreach.db
+=======
+>>>>>>> origin/main

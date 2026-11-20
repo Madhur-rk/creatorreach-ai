@@ -1,5 +1,11 @@
 streamlit>=1.36
+<<<<<<< HEAD
 pandas>=2.0,<3.0
 python-dotenv>=1.0
 openai>=1.30
 requests>=2.31
+=======
+pandas>=2.2,<3.0
+python-dotenv>=1.0
+openai>=1.30
+>>>>>>> origin/main
